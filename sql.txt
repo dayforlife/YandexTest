@@ -1,0 +1,65 @@
+Какой клиент больше всего произвел закупок за весь период?
+SELECT c.first_name, c.last_name, COUNT(p.id) AS total_purchases, SUM(p.total_amount) AS total_spent
+FROM client c
+JOIN purchase p ON c.id = p.client_id
+GROUP BY c.id
+ORDER BY total_purchases DESC
+LIMIT 1;
+
+
+
+Как получить все записи?
+SELECT * FROM client;
+SELECT * FROM item;
+SELECT * FROM purchase;
+
+
+Самый популярный товар по количеству продаж
+SELECT i.name, COUNT(p.id) AS total_sold
+FROM item i
+JOIN purchase p ON i.id = p.item_id
+GROUP BY i.id
+ORDER BY total_sold DESC
+LIMIT 1;
+
+
+
+Функция для получения топ-3 популярных товаров за период
+CREATE OR REPLACE FUNCTION get_top_3_items(start_date DATE, end_date DATE)
+RETURNS TABLE(id INT, name TEXT, quantity INT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT i.id, i.name, COUNT(p.id) AS quantity
+    FROM item i
+    JOIN purchase p ON i.id = p.item_id
+    WHERE p.purchase_date BETWEEN start_date AND end_date
+    GROUP BY i.id
+    ORDER BY quantity DESC
+    LIMIT 3;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT * FROM get_top_3_items('2021-12-01', '2022-01-01');
+
+
+Кто больше делает закупок: мужчины или женщины?
+Количество покупок:
+SELECT c.gender, COUNT(p.id) AS total_purchases
+FROM client c
+JOIN purchase p ON c.id = p.client_id
+GROUP BY c.gender
+ORDER BY total_purchases DESC;
+
+Сумма потраченных денег:
+SELECT c.gender, SUM(p.total_amount) AS total_spent
+FROM client c
+JOIN purchase p ON c.id = p.client_id
+GROUP BY c.gender
+ORDER BY total_spent DESC;
+
+
+Объем продаж для клиентов с .ru доменом
+SELECT COUNT(p.id) AS total_sales, SUM(p.total_amount) AS total_revenue
+FROM client c
+JOIN purchase p ON c.id = p.client_id
+WHERE c.email LIKE '%.ru';
