@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14
+    restart: always
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: yandextestdb
+      POSTGRES_USER: yandextest
+      POSTGRES_PASSWORD: yandextest
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    restart: always
+    container_name: django_web
+    depends_on:
+      - db
+    environment:
+      - DATABASE_NAME=yandextestdb
+      - DATABASE_USER=yandextest
+      - DATABASE_PASSWORD=yandextest
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  postgres_data:
